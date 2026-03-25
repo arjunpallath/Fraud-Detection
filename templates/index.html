@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bankio | Money Safety</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <svg class="logo-icon" width="38" height="38" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="var(--accent)" fill-rule="evenodd" d="M47.5 15h65l32.5 32.5v65L112.5 145h-65L15 112.5v-65L47.5 15zm0 21.6L26.6 57.5h20.9L80 25l32.5 32.5h20.9L112.5 36.6 80 15 47.5 36.6zM80 63.4L58.4 85 80 106.6 101.6 85 80 63.4zM26.6 102.5L47.5 123.4 80 145l32.5-21.6 20.9-20.9H112.5L80 135 47.5 102.5H26.6zM15 68.4v23.2l20.9 20.9h23.2L37.5 90.9 15 68.4zm130 23.2V68.4L124.1 47.5h-23.2l21.6 21.6 22.5 22.5z"/>
+                </svg>
+                <h1 style="text-transform: uppercase; color: var(--accent);">Bankio</h1>
+            </div>
+            
+            <nav class="side-nav">
+                <a href="#" class="nav-item active" data-target="dashboard">
+                    <span class="icon">📊</span> Dashboard
+                </a>
+                <a href="#" class="nav-item" data-target="history">
+                    <span class="icon">🧾</span> History
+                </a>
+                {% if role == 'admin' %}
+                <a href="#" class="nav-item" data-target="analytics" id="nav-analytics">
+                    <span class="icon">📈</span> Analytics
+                </a>
+                <a href="#" class="nav-item" data-target="admin" id="nav-admin">
+                    <span class="icon">🛡️</span> Staff Area
+                </a>
+                {% endif %}
+                <a href="#" class="nav-item" data-target="settings">
+                    <span class="icon">⚙️</span> Settings
+                </a>
+                <a href="#" class="nav-item" data-target="support">
+                    <span class="icon">🎧</span> Support
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">👤</div>
+                    <div class="user-info">
+                        <span class="user-name">{{ 'Bank Staff' if role == 'admin' else 'Customer' }}</span>
+                        <a href="/logout" class="logout-link">Logout Account</a>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-header">
+                <div>
+                    <h2 id="page-title">Security Dashboard</h2>
+                    <p class="subtitle" id="page-subtitle">Checking your money moves</p>
+                </div>
+            </header>
+
+            <!-- Page Sections -->
+            <div class="content-wrapper">
+                
+                <!-- 1. Dashboard Section -->
+                <section id="dashboard" class="page-section active">
+                    <div class="dashboard-split">
+                        <!-- Left Form -->
+                        <div class="glass-panel">
+                            <h3>Check a Move</h3>
+                            <form id="predict-form">
+                                <div class="form-grid">
+                                    <div class="input-group">
+                                        <label>Amount ($)</label>
+                                        <input type="number" id="TransactionAmount" step="0.01" required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label>Money in Bank ($)</label>
+                                        <input type="number" id="AccountBalance" step="0.01" required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label>Age</label>
+                                        <input type="number" id="CustomerAge" required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label>Time taken (sec)</label>
+                                        <input type="number" id="TransactionDuration" required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label>Login Tries</label>
+                                        <input type="number" id="LoginAttempts" required>
+                                    </div>
+                                    <div class="input-group">
+                                        <label>Where</label>
+                                        <select id="Channel" required>
+                                            <option value="Online">Online</option>
+                                            <option value="ATM">ATM</option>
+                                            <option value="Branch">Branch</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-group full-span">
+                                        <label>How</label>
+                                        <select id="TransactionType" required>
+                                            <option value="Debit">Debit</option>
+                                            <option value="Credit">Credit</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button type="submit" class="submit-btn" id="submit-btn">Check for Problems</button>
+                            </form>
+                        </div>
+
+                        <!-- Right AI Result -->
+                        <div class="glass-panel result-panel">
+                            <h3>Safety Check</h3>
+                            <hr class="divider">
+                            
+                            <div id="initial-state" class="state-container active">
+                                <div class="icon-placeholder">⏳</div>
+                                <p>Waiting for move details...</p>
+                            </div>
+
+                            <div id="result-state" class="state-container">
+                                <div class="status-badge" id="status-badge">Safe</div>
+                                <h3 id="result-title">Looks Good</h3>
+                                
+                                <div class="score-container">
+                                    <div class="score-header">
+                                        <span>Chance of Theft</span>
+                                        <span id="score-value">--</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" id="progress-fill"></div>
+                                    </div>
+                                </div>
+                                
+                                <p class="result-description" id="result-description">
+                                    This move looks normal and safe.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. Transaction History Section -->
+                <section id="history" class="page-section">
+                    <div class="glass-panel">
+                        <h3>🧾 Past Activities</h3>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Txn ID</th>
+                                        <th>Amt</th>
+                                        <th>Type</th>
+                                        <th>Time</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body">
+                                    <!-- Dynamic rows via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                {% if role == 'admin' %}
+                <!-- 3. Analytics Section -->
+                <section id="analytics" class="page-section">
+                    <div class="stats-cards">
+                        <div class="glass-panel stat-card">
+                            <h4 class="text-muted">Total Monitored</h4>
+                            <div class="stat-num" id="stat-total">--</div>
+                        </div>
+                        <div class="glass-panel stat-card">
+                            <h4 class="text-muted">Fraud Prevented</h4>
+                            <div class="stat-num text-danger" id="stat-fraud">--</div>
+                        </div>
+                        <div class="glass-panel stat-card">
+                            <h4 class="text-muted">Accuracy</h4>
+                            <div class="stat-num text-success" id="stat-acc">--</div>
+                        </div>
+                    </div>
+                    
+                    <div class="charts-wrap">
+                        <div class="glass-panel chart-box flex-3">
+                            <h3 style="margin-bottom:1rem;">Weekly Money Move Volume</h3>
+                            <canvas id="barChart"></canvas>
+                        </div>
+                        <div class="glass-panel chart-box flex-2">
+                            <h3 style="margin-bottom:1rem;">Fake vs Real Moves</h3>
+                            <canvas id="doughnutChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+                {% endif %}
+
+                <!-- 4. Settings Section -->
+                <section id="settings" class="page-section">
+                    <div class="glass-panel" style="max-width: 600px;">
+                        <h3>⚙️ Application Settings</h3>
+                        <hr class="divider">
+                        
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <h4>Theme Mode</h4>
+                                <p class="text-muted">Toggle visually between Light and Dark interface.</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="theme-toggle">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <hr class="divider">
+                        <div class="setting-row">
+                            <div class="setting-info">
+                                <h4>Automated Action</h4>
+                                <p class="text-muted">Automatically freeze accounts upon critical system suspicion.</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
+                {% if role == 'admin' %}
+                <!-- 6. Staff Area Section -->
+                <section id="admin" class="page-section">
+                    <div class="stats-cards">
+                        <div class="glass-panel stat-card">
+                            <h4 class="text-muted">Moves to Check</h4>
+                            <div class="stat-num text-warning" id="stat-pending">0</div>
+                        </div>
+                        <div class="glass-panel stat-card">
+                            <h4 class="text-muted">Checked Moves</h4>
+                            <div class="stat-num" id="stat-decisions">0</div>
+                        </div>
+                        <div class="glass-panel stat-card">
+                            <h4 class="text-muted">Safety Status</h4>
+                            <div class="stat-num text-success">Active</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel mb-4">
+                        <div class="panel-header">
+                            <h3>🛡️ Weird Moves List</h3>
+                            <button class="btn-outline btn-small" id="refresh-admin">Refresh List</button>
+                        </div>
+                        <div class="table-responsive mt-3">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Details</th>
+                                        <th>Risk Score</th>
+                                        <th>When</th>
+                                        <th>What to do</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-table-body">
+                                    <!-- Dynamic rows via JS -->
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4">No weird moves found.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel">
+                        <h3>📋 Security Action Log</h3>
+                        <div class="table-responsive mt-3">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Action</th>
+                                        <th>Result</th>
+                                        <th>When</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-log-body">
+                                    <!-- Dynamic rows via JS -->
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4">No actions taken yet.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                {% endif %}
+                
+            </div>
+        </main>
+    </div>
+
+    <!-- Script connection -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

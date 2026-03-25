@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bankio | Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body { margin: 0; display: flex; height: 100vh; overflow: hidden; background-color: var(--bg-color); }
+        .auth-layout { display: flex; width: 100vw; height: 100vh; }
+        
+        .auth-left {
+            flex: 1;
+            background: linear-gradient(rgba(30, 58, 138, 0.8), rgba(15, 23, 42, 0.6)), 
+                        url("{{ url_for('static', filename='login_bg.png') }}");
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 4rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .auth-left::after {
+            content: '';
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            top: -200px;
+            left: -200px;
+        }
+
+        .auth-right {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-color);
+            padding: 2rem;
+            position: relative;
+        }
+
+        .hero-logo { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+        .hero-logo svg { fill: white; }
+        .hero-logo h1 { font-family: 'Outfit'; font-size: 2.5rem; letter-spacing: 1px; }
+
+        .hero-text h2 { font-size: 3.5rem; font-weight: 700; font-family: 'Outfit'; line-height: 1.1; margin-bottom: 1.5rem; }
+        .hero-text p { font-size: 1.1rem; color: rgba(255, 255, 255, 0.85); max-width: 500px; line-height: 1.6; }
+
+        .auth-card {
+            width: 100%;
+            max-width: 440px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1);
+            padding: 3rem;
+        }
+
+        .auth-header { margin-bottom: 2.5rem; text-align: center; }
+        .auth-header h3 { font-size: 1.75rem; font-family: 'Outfit'; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem; }
+        .auth-header p { color: var(--text-muted); font-size: 0.95rem; }
+
+        .auth-tabs { display: flex; background: rgba(0,0,0,0.03); border-radius: 10px; padding: 0.3rem; margin-bottom: 2rem;}
+        .auth-tab { flex: 1; text-align: center; padding: 0.75rem; cursor: pointer; color: var(--text-muted); font-weight: 600; font-size: 0.9rem; border-radius: 8px; transition: all 0.3s;}
+        .auth-tab.active { background: white; color: var(--text-main); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+
+        .input-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-main); }
+        .input-group input { padding: 0.9rem; font-size: 1rem; border-radius: 8px; background: rgba(0,0,0,0.02); border: 1px solid var(--panel-border); transition: all 0.2s;}
+        .input-group input:focus { border-color: var(--accent); background: white; box-shadow: 0 0 0 4px rgba(211, 47, 47, 0.1); }
+        
+        .prefix-box { background: rgba(0,0,0,0.03); border: 1px solid var(--panel-border); border-right: none; padding: 0 1rem; display: flex; align-items: center; border-radius: 8px 0 0 8px; font-weight: 600; color: var(--text-muted); }
+        .phone-input { border-radius: 0 8px 8px 0 !important; }
+
+        .btn-primary { width: 100%; padding: 1rem; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.3s; margin-top: 1rem; box-shadow: 0 4px 15px rgba(211,47,47,0.2); }
+        .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(30, 64, 175, 0.4); }
+        
+        #auth-error { background: var(--danger-bg); color: var(--danger); padding: 0.75rem; border-radius: 8px; font-size: 0.9rem; margin-bottom: 1.5rem; display: none; text-align: center; border: 1px solid rgba(220, 38, 38, 0.3); }
+
+        .role-selector { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+        .role-option { 
+            flex: 1; 
+            padding: 1rem; 
+            border: 1px solid var(--panel-border); 
+            border-radius: 12px; 
+            cursor: pointer; 
+            text-align: center; 
+            transition: all 0.3s;
+            background: rgba(0,0,0,0.02);
+        }
+        .role-option:hover { border-color: var(--accent); background: white; }
+        .role-option.active { 
+            border-color: var(--accent); 
+            background: white; 
+            box-shadow: 0 4px 12px rgba(211,47,47,0.1);
+        }
+        .role-option .role-icon { font-size: 1.5rem; margin-bottom: 0.5rem; display: block; }
+        .role-option span { font-weight: 600; font-size: 0.9rem; color: var(--text-main); }
+        .role-option.active span { color: var(--accent); }
+
+        @media (max-width: 900px) {
+            .auth-layout { flex-direction: column; }
+            .auth-left { padding: 2rem; flex: none; height: auto; }
+            .hero-text h2 { font-size: 2rem; }
+            .auth-right { padding: 1rem; }
+            .auth-card { padding: 2rem; box-shadow: none; border: none; background: transparent; }
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="auth-layout">
+        <!-- Left Hero Section -->
+        <div class="auth-left">
+            <div class="hero-logo">
+                <svg class="logo-icon" width="45" height="45" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="#ffffff" fill-rule="evenodd" d="M47.5 15h65l32.5 32.5v65L112.5 145h-65L15 112.5v-65L47.5 15zm0 21.6L26.6 57.5h20.9L80 25l32.5 32.5h20.9L112.5 36.6 80 15 47.5 36.6zM80 63.4L58.4 85 80 106.6 101.6 85 80 63.4zM26.6 102.5L47.5 123.4 80 145l32.5-21.6 20.9-20.9H112.5L80 135 47.5 102.5H26.6zM15 68.4v23.2l20.9 20.9h23.2L37.5 90.9 15 68.4zm130 23.2V68.4L124.1 47.5h-23.2l21.6 21.6 22.5 22.5z"/>
+                </svg>
+                <h1 style="color: white !important;">Bankio</h1>
+            </div>
+            
+            <div class="hero-text">
+                <h2>Bank Security System</h2>
+                <p>Welcome to Bankio. We use smart technology to keep your money safe and watch for any suspicious activity.</p>
+            </div>
+            
+            <div class="hero-footer" style="font-size: 0.85rem; color: rgba(255,255,255,0.6); font-family: monospace;">
+                &copy; 2026 Bankio Berhad. All rights reserved. System V4.0.2
+            </div>
+        </div>
+
+        <!-- Right Auth Section -->
+        <div class="auth-right">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h3>Sign In</h3>
+                    <p>Who are you today?</p>
+                </div>
+
+                <div class="role-selector">
+                    <div class="role-option active" onclick="setRole('user')" id="role-user">
+                        <span class="role-icon">👤</span>
+                        <span>Customer</span>
+                    </div>
+                    <div class="role-option" onclick="setRole('admin')" id="role-admin">
+                        <span class="role-icon">🛡️</span>
+                        <span>Bank Staff</span>
+                    </div>
+                </div>
+
+                <div class="auth-tabs">
+                    <div class="auth-tab active" id="tab-login" onclick="switchAuth('login')">Sign In</div>
+                    <div class="auth-tab" id="tab-register" onclick="switchAuth('register')">Join Now</div>
+                </div>
+                
+                <div id="auth-error"></div>
+
+                <form id="auth-form">
+                    <div class="input-group" style="margin-bottom: 1.5rem;">
+                        <label for="phone" style="margin-bottom: 0.5rem; display: block;">Your Phone Number</label>
+                        <div style="display: flex;">
+                            <span class="prefix-box">+91</span>
+                            <input type="tel" id="phone" class="phone-input" required placeholder="000 000 0000" pattern="[0-9]{10}" maxlength="10" style="flex: 1;">
+                        </div>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 2rem;">
+                        <label for="password" style="margin-bottom: 0.5rem; display: block;">Password</label>
+                        <input type="password" id="password" required placeholder="••••••••" style="width: 100%; box-sizing: border-box;">
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" id="auth-btn">
+                        <span class="btn-text">Login</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'login';
+        let currentRole = 'user';
+
+        function setRole(role) {
+            currentRole = role;
+            document.getElementById('role-user').classList.toggle('active', role === 'user');
+            document.getElementById('role-admin').classList.toggle('active', role === 'admin');
+        }
+        
+        function switchAuth(mode) {
+            currentMode = mode;
+            document.getElementById('tab-login').classList.toggle('active', mode === 'login');
+            document.getElementById('tab-register').classList.toggle('active', mode === 'register');
+            document.getElementById('auth-btn').querySelector('.btn-text').textContent = mode === 'login' ? 'Login' : 'Create Account';
+            document.getElementById('auth-error').style.display = 'none';
+        }
+
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const phone = '+91' + document.getElementById('phone').value;
+            const password = document.getElementById('password').value;
+            const errorEl = document.getElementById('auth-error');
+            const submitBtn = document.getElementById('auth-btn');
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Checking...';
+
+            try {
+                const res = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, password, action: currentMode, role: currentRole })
+                });
+                const data = await res.json();
+                
+                if (data.status === 'success') {
+                    window.location.href = '/';
+                } else {
+                    errorEl.textContent = data.message;
+                    errorEl.style.display = 'block';
+                }
+            } catch (err) {
+                errorEl.textContent = 'Connection problem. Please try again.';
+                errorEl.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.querySelector('.btn-text') ? null : submitBtn.innerHTML = `<span class="btn-text">${currentMode === 'login' ? 'Login' : 'Create Account'}</span>`;
+            }
+        });
+    </script>
+</body>
+</html>
